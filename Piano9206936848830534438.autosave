@@ -1,0 +1,91 @@
+class Piano{
+
+    int keyCount;
+    int octaveCount;
+    int remainderKeyCount;
+    ArrayList<Key> keys;
+    ArrayList<Boolean> states;
+    ArrayList<Key> remainderKeys;
+
+    
+
+    Piano(int keyCount_){
+
+        this.keyCount = keyCount_;
+        this.keys = new ArrayList<Key>();
+        this.states = new ArrayList<Boolean>();
+        for(int i = 0 ; i < keyCount_ ; i++){
+            this.states.add(false);
+        }
+        this.createKeysDynamically();
+
+    }
+
+    void createKeysDynamically(){
+
+        this.octaveCount = this.keyCount / 12;
+        this.remainderKeyCount = this.keyCount - this.octaveCount * 12 ;
+        for(int i = 0 ; i < octaveCount ; i++){
+            this.createOneOctaveKeys(i);
+        }
+        octaveCount++;
+        if(remainderKeyCount != 0){
+            remainderKeys.add(new Key(0 + octaveCount * 490, 20, 70, 400, 255));
+            remainderKeys.add(new Key(50 + octaveCount * 490, 20, 38, 250, 0));//1
+            remainderKeys.add(new Key(70 + octaveCount * 490, 20, 70, 400, 255));
+            remainderKeys.add(new Key(120 + octaveCount * 490, 20, 38, 250, 0));//3
+            remainderKeys.add(new Key(140 + octaveCount * 490, 20, 70, 400, 255));
+            remainderKeys.add(new Key(210 + octaveCount * 490, 20, 70, 400, 255));
+            remainderKeys.add(new Key(260 + octaveCount * 490, 20, 38, 250, 0));//6
+            remainderKeys.add(new Key(280 + octaveCount * 490, 20, 70, 400, 255));
+            remainderKeys.add(new Key(330 + octaveCount * 490, 20, 38, 250, 0));//8
+            remainderKeys.add(new Key(350 + octaveCount * 490, 20, 70, 400, 255));
+            remainderKeys.add(new Key(400 + octaveCount * 490, 20, 38, 250, 0));//10
+            remainderKeys.add(new Key(420 + octaveCount * 490, 20, 70, 400, 255)); 
+            for(int k = 0 ; k < remainderKeyCount ; k++){
+                keys.add(remainderKeys.get(k));
+            }   
+        }
+    }
+
+    void createOneOctaveKeys(int octaveIndex){
+
+        keys.add(new Key(0 + octaveIndex * 490, 20, 70, 400, 255));
+        keys.add(new Key(50 + octaveIndex * 490, 20, 38, 250, 0));//1
+        keys.add(new Key(70 + octaveIndex * 490, 20, 70, 400, 255));
+        keys.add(new Key(120 + octaveIndex * 490, 20, 38, 250, 0));//3
+        keys.add(new Key(140 + octaveIndex * 490, 20, 70, 400, 255));
+        keys.add(new Key(210 + octaveIndex * 490, 20, 70, 400, 255));
+        keys.add(new Key(260 + octaveIndex * 490, 20, 38, 250, 0));//6
+        keys.add(new Key(280 + octaveIndex * 490, 20, 70, 400, 255));
+        keys.add(new Key(330 + octaveIndex * 490, 20, 38, 250, 0));//8
+        keys.add(new Key(350 + octaveIndex * 490, 20, 70, 400, 255));
+        keys.add(new Key(400 + octaveIndex * 490, 20, 38, 250, 0));//10
+        keys.add(new Key(420 + octaveIndex * 490, 20, 70, 400, 255));
+    }
+
+    final static int c4 = 0;
+    final static int db4 = 1;
+    final static int d4 = 2;
+    final static int eb4 = 3;
+    final static int e4 = 4;
+    final static int f4 = 5;
+    final static int gb4 = 6;
+    final static int g4 = 7;
+    final static int ab4 = 8;
+    final static int a4 = 9;
+    final static int bb4 = 10;
+    final static int b4 = 11;
+    final static int c5 = 12;
+    final static int db5 = 13;
+    final static int d5 = 14;
+    final static int eb5 = 15;
+    final static int e5 = 16;
+    final static int f5 = 17;
+    final static int gb5 = 18;
+    final static int g5 = 19;
+    final static int ab5 = 20;
+    final static int a5 = 21;
+    final static int bb5 = 22;
+    final static int b5 = 23;
+}
