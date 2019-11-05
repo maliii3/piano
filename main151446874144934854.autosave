@@ -36,6 +36,7 @@ int midiDevice  = 0;
 
 void setup() {
   
+  println(width/25,width/250, (width/25 - width/125));
   tutorialImage = loadImage("tutorial.png");
   recordImage = loadImage("record.png");
   backImage = loadImage("back.png");
@@ -354,9 +355,9 @@ void startRecordButton(){
   noStroke();
   fill(0);
   rectMode(CENTER);
-  rect(0,0,width/25,width/25);
+  //rect(0,0,width/25,width/25);
+
   fill(222);
-  rectMode(CENTER);
   rect(width/250, width/250, (width/25 - width/125), (width /25 - width/125));
   fill(244,0,0);
   ellipseMode(CENTER);

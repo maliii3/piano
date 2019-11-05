@@ -10,7 +10,7 @@ static final int TUTORIAL_STATE = 3;
 static final int SETTINGS_STATE = 4;
 static final int MODE_SELECTION_STATE = 5;
 
-	
+
 PrintWriter output;
 PImage tutorialImage;
 PImage recordImage;
@@ -35,32 +35,31 @@ int currentColor = 0;
 int midiDevice  = 0;
 
 void setup() {
-  
+
+
   tutorialImage = loadImage("tutorial.png");
   recordImage = loadImage("record.png");
   backImage = loadImage("back.png");
 
   background(204);
-  
+
   String[] lines = loadStrings("db.txt");
-  
- if(lines == null || lines.length == 0){
-   state = SETUP_STATE; // SETUP STATE
-    output = createWriter("db.txt"); 
-   
- }
- else{
+
+  if (lines == null || lines.length == 0) {
+    state = SETUP_STATE; // SETUP STATE
+    output = createWriter("db.txt");
+  } else {
     state = MODE_SELECTION_STATE;
 
     pianoKeyCount = Integer.parseInt(lines[0]);
-    
+
     piano = new Piano(pianoKeyCount);
-  
+
     println(this.piano.pianoWidth);
     println(this.piano.pianoHeight);
 
     myBus = new MidiBus(this, midiDevice, 1);
- }
+  }
   fullScreen();
   //printArray(Serial.list());
   //port = new Serial(this, Serial.list()[4], 9600);
@@ -70,42 +69,40 @@ void setup() {
 
 void draw() {
 
-    switch(state) {
- 
-        case SETUP_STATE:
-        //
-            setupState();
-            break;
- 
-        case READY_STATE:
-        //
-            readyState();
-            break;
- 
-        case RECORD_STATE:
-        //
-            recordState();
-            break;
+  switch(state) {
 
-        case TUTORIAL_STATE:
+  case SETUP_STATE:
+    //
+    setupState();
+    break;
 
-            tutorialState();
-            break;
+  case READY_STATE:
+    //
+    readyState();
+    break;
 
-        case SETTINGS_STATE:
+  case RECORD_STATE:
+    //
+    recordState();
+    break;
 
-            settingState();
-            break;
+  case TUTORIAL_STATE:
 
-        case MODE_SELECTION_STATE:
+    tutorialState();
+    break;
 
-            modeSelectionState();
-            break;
+  case SETTINGS_STATE:
 
- 
-    }//switch
-  
-  
+    settingState();
+    break;
+
+  case MODE_SELECTION_STATE:
+
+    modeSelectionState();
+    break;
+  }//switch
+
+
 
   // if (upcoming.size() > 0) {
 
@@ -120,57 +117,55 @@ void draw() {
   //       port.write('e');
   //     }
   //   } else {
-     
+
   //     upcoming.remove(0);
   //     delay(1000);
   //   }
   // }
 }
 
-void setupState(){
-    
-    myFont = createFont("Tahoma", 32);
-    textFont(myFont);
-    textSize(32);
-    fill(0);
-    textAlign(CENTER);
-    text("How many keys your piano have?: ", width/2, height/2 - 100); 
-    textInputDiv();
+void setupState() {
 
+  myFont = createFont("Tahoma", 32);
+  textFont(myFont);
+  textSize(32);
+  fill(0);
+  textAlign(CENTER);
+  text("How many keys your piano have?: ", width/2, height/2 - 100); 
+  textInputDiv();
 }
 
-void readyState(){
-  
+void readyState() {
+
   stroke(1);
   //rectMode(CENTER);
 
   float scaleValue = width * 1.0 / piano.pianoWidth;
-  
-  if(piano.pianoWidth > width){
-    
+
+  if (piano.pianoWidth > width) {
+
     translate(width / 2 - piano.pianoWidth * scaleValue / 2, height / 2 - (piano.pianoHeight * scaleValue) / 2);
     scale(scaleValue);
-  }
-  else {
+  } else {
     translate(width / 2 - piano.pianoWidth / 2, height / 2 - piano.pianoHeight / 2);
   }
-  
-  for (int j = 0; j < piano.keyCount ; j++) {
-    for(int a = 0; a < piano.octaveCount + 1 ; a++){
+
+  for (int j = 0; j < piano.keyCount; j++) {
+    for (int a = 0; a < piano.octaveCount + 1; a++) {
       if (j != 1 + a * 12 || j != 3 + a * 12 || j != 6 + a * 12 ||j != 8 + a * 12 || j != 10 + a * 12 )
         piano.keys.get(j).show(piano.states.get(j));
     }
   }
 
   for (int k = 0; k < piano.keyCount; k++) {
-    for(int b = 0; b < piano.octaveCount + 1 ; b++){
+    for (int b = 0; b < piano.octaveCount + 1; b++) {
       if (k == 1 + b * 12 || k == 3 + b * 12 || k == 6 + b * 12 ||k == 8 + b * 12 || k == 10 + b * 12 )
         piano.keys.get(k).show(piano.states.get(k));
     }
   }
 }
 
-void recordState(){
+void recordState() {
 
   pushMatrix();
   background(204);
@@ -182,10 +177,9 @@ void recordState(){
   text("RECORD STATE", width/2, height/2);
   backButton();
   popMatrix();
-
 }
 
-void tutorialState(){
+void tutorialState() {
 
   pushMatrix();
   background(204);
@@ -196,16 +190,13 @@ void tutorialState(){
   text("TUTORIAL STATE", width/2, height/2); 
   backButton();
   popMatrix();
-  
 }
 
-void settingState(){
+void settingState() {
   // SETTING SHOULD BE CHANGED LATER ON WE WILL DEAL WITH IT RIGHT HERE
-
-
 }
 
-void modeSelectionState(){
+void modeSelectionState() {
 
   //print("state is: Mode Selection");
   // IN THIS FUNCTION USER WILL CHOOSE THE MODE TYPE (RECORD OR TUTORIAL)
@@ -214,158 +205,155 @@ void modeSelectionState(){
   recordButton();
 }
 
-void textInputDiv(){
+void textInputDiv() {
 
   pushMatrix();
   rectMode(CENTER);
   noStroke();
   fill(anannnn);
   rect(width/2, height/2, width/10, height/10, 10);
-  
-  if(clicked){
 
-      rectMode(CORNER);
-      
-      translate(width/2 - width/20, height/2 - height/20);
+  if (clicked) {
 
-      myFont = createFont("Tahoma", 72);
-      textFont(myFont);
+    rectMode(CORNER);
+
+    translate(width/2 - width/20, height/2 - height/20);
+
+    myFont = createFont("Tahoma", 72);
+    textFont(myFont);
+    fill(0);
+    //textAlign(CENTER);
+    text(msg, width/20, height/15 ); 
+
+
+    if (frameCount % 5 == 0) {
       fill(0);
-      //textAlign(CENTER);
-      text(msg, width/20, height/15 ); 
+      delay(250);
+    } else {
+      fill(200);
+      delay(250);
+    }
 
-      
-      if(frameCount % 5 == 0){
-          fill(0);
-          delay(250);
-      }
-      else{
-          fill(200);
-          delay(250);
-      }
-
-      rect(10,10,10,height/10-20);
+    rect(10, 10, 10, height/10-20);
   }
   popMatrix();
 }
 
-void mousePressed(){
-  
-  if(state == SETUP_STATE){
-    if(width/2 - width/20 < mouseX && mouseX < width/2 + width/20 && height/2 - height/20 < mouseY && mouseY < height/2 + height/20 ){
-        anannnn = 200;
-        clicked = true;
+void mousePressed() {
+
+  if (state == SETUP_STATE) {
+    if (width/2 - width/20 < mouseX && mouseX < width/2 + width/20 && height/2 - height/20 < mouseY && mouseY < height/2 + height/20 ) {
+      anannnn = 200;
+      clicked = true;
     }
   }
   // else {
   //     clicked = false;
   // }
 
-  if(state == MODE_SELECTION_STATE){
+  if (state == MODE_SELECTION_STATE) {
 
-    if(width * 0.1 < mouseX && mouseX < width * 0.45 && height * 0.5 - (width * 0.175) < mouseY && mouseY < height * 0.5 + (width * 0.175)){
+    if (width * 0.1 < mouseX && mouseX < width * 0.45 && height * 0.5 - (width * 0.175) < mouseY && mouseY < height * 0.5 + (width * 0.175)) {
       state = TUTORIAL_STATE;
     }
 
-    if(width * 0.55 < mouseX && mouseX < width * 0.9 && height * 0.5 - (width * 0.175) < mouseY && mouseY < height * 0.5 + (width * 0.175)){
+    if (width * 0.55 < mouseX && mouseX < width * 0.9 && height * 0.5 - (width * 0.175) < mouseY && mouseY < height * 0.5 + (width * 0.175)) {
       state = RECORD_STATE;
     }
   }
 
-  if(state == RECORD_STATE || state == TUTORIAL_STATE){
+  if (state == RECORD_STATE || state == TUTORIAL_STATE) {
 
-    if(width / 50 < mouseX && mouseX < width / 50 + width / 25 && width / 50 < mouseY && mouseY < width / 50 + width / 25){
+    if (width / 50 < mouseX && mouseX < width / 50 + width / 25 && width / 50 < mouseY && mouseY < width / 50 + width / 25) {
 
       state = MODE_SELECTION_STATE;
     }
   }
 }
 
-void keyPressed(){
-  if(clicked){
+void keyPressed() {
+  if (clicked) {
     //Detects only alphanumeric chars
     if ((key>='0' && key<='9') && msg.length() < 2) {
-        msg+=key;
+      msg+=key;
     }
-    if(key == BACKSPACE && msg.length() > 0 ){
+    if (key == BACKSPACE && msg.length() > 0 ) {
 
-        msg = msg.substring(0,msg.length()-1);
+      msg = msg.substring(0, msg.length()-1);
     }
 
-    if(key == ENTER){
-        state = MODE_SELECTION_STATE;
-        output.print(msg);
-        output.flush();
-        output.close();
-        setup();
+    if (key == ENTER) {
+      state = MODE_SELECTION_STATE;
+      output.print(msg);
+      output.flush();
+      output.close();
+      setup();
     }
   }
 }
 
-void tutorialButton(){
+void tutorialButton() {
 
   pushMatrix();
   rectMode(CORNER);
   fill(150);
   noStroke();
-  rect(width * 0.1 , height * 0.5 - (width * 0.175) , width * 0.35 , width * 0.35 , width / 100);
-  translate(width * 0.1 , height * 0.5 - (width * 0.175));
+  rect(width * 0.1, height * 0.5 - (width * 0.175), width * 0.35, width * 0.35, width / 100);
+  translate(width * 0.1, height * 0.5 - (width * 0.175));
   imageMode(CENTER);
   float imageScaleValue = width * 0.30 / tutorialImage.width;
   image(tutorialImage, width * 0.175, width * 0.175, width * 0.30, tutorialImage.height * imageScaleValue);
   popMatrix();
-
 }
 
 
-void recordButton(){
+void recordButton() {
 
   pushMatrix();
   rectMode(CORNER);
   fill(150);
   noStroke();
-  rect(width * 0.55 , height * 0.5 - (width * 0.175), width * 0.35 , width * 0.35 , width / 100 );
-  translate(width * 0.55 , height * 0.5 - (width * 0.175));
+  rect(width * 0.55, height * 0.5 - (width * 0.175), width * 0.35, width * 0.35, width / 100 );
+  translate(width * 0.55, height * 0.5 - (width * 0.175));
   imageMode(CENTER);
   float imageScaleValue = width * 0.20 / recordImage.width;
-  image(recordImage, width * 0.175 , width * 0.175, width * 0.20, recordImage.height * imageScaleValue);
+  image(recordImage, width * 0.175, width * 0.175, width * 0.20, recordImage.height * imageScaleValue);
   popMatrix();
-
 }
 
-void backButton(){
+void backButton() {
 
   pushMatrix();
   fill(204);
   noStroke();
   rectMode(CENTER);
-  rect(width / 25, width / 25, width/25 , width/25);
+  rect(width / 25, width / 25, width/25, width/25);
   translate(width / 25, width / 25);
   imageMode(CENTER);
-  image(backImage, 0, 0 , width / 25, width / 25 );
+  image(backImage, 0, 0, width / 25, width / 25 );
   popMatrix();
 }
 
-void startRecordButton(){
+void startRecordButton() {
 
   pushMatrix();
-  
+
   translate(width/2, height/ 10);
   noStroke();
   fill(0);
   rectMode(CENTER);
-  rect(0,0,width/25,width/25);
-  fill(222);
-  rectMode(CENTER);
-  rect(width/250, width/250, (width/25 - width/125), (width /25 - width/125));
-  fill(244,0,0);
+  rect(0, 0, width/25, width/25);
+  fill(204);
+  rect((width/25)/5, (width/25)/5, width/25 - (width/25)/5, width/25 - (width/25)/5);
+  fill(244, 0, 0);
   ellipseMode(CENTER);
   ellipse(0, 0, width/25 - (width/25)/10, width/25 - (width/25)/10);
+
 
   popMatrix();
 }
 
-void stopRecordButton(){
+void stopRecordButton() {
 
   pushMatrix();
 
@@ -377,7 +365,7 @@ void stopRecordButton(){
 
 void midiMessage(MidiMessage message) {
 
-  if(state == READY_STATE){
+  if (state == READY_STATE) {
 
     int note = (int)(message.getMessage()[1] & 0xFF) ;
     int vel = (int)(message.getMessage()[2] & 0xFF);
@@ -404,12 +392,12 @@ void midiMessage(MidiMessage message) {
 
         //       if (currentChord.get(i) == note) {
         //         println(note, " için girdim");
-              
+
         //         states.set(note-48, false);
         //         port.write(Integer.toString((12 - ((note-48)))*2));
         //         // write any charcter that marks the end of a number
         //         port.write('e');
-              
+
         //         currentChord.remove(i);
         //       }
         //     }
@@ -432,13 +420,5 @@ void midiMessage(MidiMessage message) {
   }
 }
 
-void recordFromMidi(){
-
-
-
-
-
-
-
-
+void recordFromMidi() {
 }
