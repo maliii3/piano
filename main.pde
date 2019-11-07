@@ -1,7 +1,8 @@
+import java.io.*;
+import java.lang.*;
 import themidibus.*; //Import the library
 import javax.sound.midi.MidiMessage;
 import processing.serial.*;
-
 
 static final int SETUP_STATE = 0;
 static final int READY_STATE = 1;
@@ -12,13 +13,19 @@ static final int MODE_SELECTION_STATE = 5;
 
 	
 PrintWriter output;
+PrintWriter midiRecord;
 PImage tutorialImage;
 PImage recordImage;
 PImage backImage;
+PImage startRecordImage;
+PImage stopRecordImage;
+PImage playImage;
+File recordFile;
 
+Timer timer;
 int state;
 boolean recording = false;
-String msg = "" ;
+String msg = "";
 Piano piano;
 int pianoKeyCount;
 boolean clicked = false;
@@ -26,7 +33,7 @@ PFont myFont;
 int anannnn = 222;
 ArrayList<Integer> notes = new ArrayList<Integer>();
 ArrayList<Integer> chords = new ArrayList<Integer>();
-ArrayList<ArrayList<Integer> > upcoming= new ArrayList<ArrayList<Integer> >();
+ArrayList<ArrayList<Integer> > upcoming = new ArrayList<ArrayList<Integer> >();
 
 Serial port;
 MidiBus myBus;
@@ -36,20 +43,31 @@ int midiDevice  = 0;
 
 void setup() {
   
+  timer = new Timer();
+  startRecordImage = loadImage("startRecord.png");
+  stopRecordImage = loadImage("stopRecord.png");
   tutorialImage = loadImage("tutorial.png");
   recordImage = loadImage("record.png");
   backImage = loadImage("back.png");
+  playImage = loadImage("play.png");
 
   background(204);
   
+  recordFile = new File(sketchPath() + "/records");
+  String[] listPath = recordFile.list();
+
+  String recordName = "record" + Integer.toString(listPath.length);
+
+  midiRecord = createWriter("./records/" + recordName + ".txt"); 
+
   String[] lines = loadStrings("db.txt");
   
- if(lines == null || lines.length == 0){
-   state = SETUP_STATE; // SETUP STATE
+  if(lines == null || lines.length == 0){
+    state = SETUP_STATE; // SETUP STATE
     output = createWriter("db.txt"); 
    
- }
- else{
+  }
+  else{
     state = MODE_SELECTION_STATE;
 
     pianoKeyCount = Integer.parseInt(lines[0]);
@@ -60,7 +78,7 @@ void setup() {
     println(this.piano.pianoHeight);
 
     myBus = new MidiBus(this, midiDevice, 1);
- }
+  }
   fullScreen();
   //printArray(Serial.list());
   //port = new Serial(this, Serial.list()[4], 9600);
@@ -105,8 +123,6 @@ void draw() {
  
     }//switch
   
-  
-
   // if (upcoming.size() > 0) {
 
   //   if (upcoming.get(0).size() > 0) {
@@ -129,18 +145,21 @@ void draw() {
 
 void setupState(){
     
+    background(204);
     myFont = createFont("Tahoma", 32);
     textFont(myFont);
     textSize(32);
     fill(0);
     textAlign(CENTER);
-    text("How many keys your piano have?: ", width/2, height/2 - 100); 
+    text("How many keys your piano have? ", width/2, height/2 - 100); 
     textInputDiv();
 
 }
 
 void readyState(){
   
+  pushMatrix();
+  rectMode(CORNER);
   stroke(1);
   //rectMode(CENTER);
 
@@ -168,21 +187,22 @@ void readyState(){
         piano.keys.get(k).show(piano.states.get(k));
     }
   }
+  popMatrix();
 }
 
 void recordState(){
 
   pushMatrix();
   background(204);
-  startRecordButton();
-  myFont = createFont("Tahoma", 100);
-  textFont(myFont);
-  fill(0);
-  textAlign(CENTER);
-  text("RECORD STATE", width/2, height/2);
+  if(!recording)
+    startRecordButton();
+  else
+    stopRecordButton();
+  playButton();
+  recordTimer();
   backButton();
+  readyState();
   popMatrix();
-
 }
 
 void tutorialState(){
@@ -200,15 +220,13 @@ void tutorialState(){
 }
 
 void settingState(){
-  // SETTING SHOULD BE CHANGED LATER ON WE WILL DEAL WITH IT RIGHT HERE
+  // piano count
 
 
 }
 
 void modeSelectionState(){
 
-  //print("state is: Mode Selection");
-  // IN THIS FUNCTION USER WILL CHOOSE THE MODE TYPE (RECORD OR TUTORIAL)
   background(204);
   tutorialButton();
   recordButton();
@@ -234,7 +252,6 @@ void textInputDiv(){
       //textAlign(CENTER);
       text(msg, width/20, height/15 ); 
 
-      
       if(frameCount % 5 == 0){
           fill(0);
           delay(250);
@@ -244,7 +261,8 @@ void textInputDiv(){
           delay(250);
       }
 
-      rect(10,10,10,height/10-20);
+      if(msg.length() == 0)
+        rect(10,10,10,height/10-20);
   }
   popMatrix();
 }
@@ -279,12 +297,30 @@ void mousePressed(){
       state = MODE_SELECTION_STATE;
     }
   }
+
+  if(state == RECORD_STATE ){
+
+    if(!recording){
+      if(width * 0.5 - width * 0.025 < mouseX && mouseX < width * 0.5 + width * 0.025 && height * 0.1 - width * 0.025 < mouseY && mouseY < height * 0.1 + width * 0.025){
+        recording = true;
+        timer.start();
+      }
+    }
+    else{
+      if(width * 0.5 - width * 0.025 < mouseX && mouseX < width * 0.5 + width * 0.025 && height * 0.1 - width * 0.025 < mouseY && mouseY < height * 0.1 + width * 0.025){
+        recording = false;
+        timer.stop();
+        midiRecord.flush();
+        midiRecord.close();
+      }
+    }
+  }
 }
 
 void keyPressed(){
   if(clicked){
     //Detects only alphanumeric chars
-    if ((key>='0' && key<='9') && msg.length() < 2) {
+    if ((key>='0' && key<='9') && msg.length() < 3) {
         msg+=key;
     }
     if(key == BACKSPACE && msg.length() > 0 ){
@@ -317,7 +353,6 @@ void tutorialButton(){
 
 }
 
-
 void recordButton(){
 
   pushMatrix();
@@ -327,10 +362,9 @@ void recordButton(){
   rect(width * 0.55 , height * 0.5 - (width * 0.175), width * 0.35 , width * 0.35 , width / 100 );
   translate(width * 0.55 , height * 0.5 - (width * 0.175));
   imageMode(CENTER);
-  float imageScaleValue = width * 0.20 / recordImage.width;
-  image(recordImage, width * 0.175 , width * 0.175, width * 0.20, recordImage.height * imageScaleValue);
+  float imageScaleValue = width * 0.20 / startRecordImage.width;
+  image(startRecordImage, width * 0.175 , width * 0.175, width * 0.20, startRecordImage.height * imageScaleValue);
   popMatrix();
-
 }
 
 void backButton(){
@@ -349,56 +383,71 @@ void backButton(){
 void startRecordButton(){
 
   pushMatrix();
-  
-  translate(width/2, height/ 10);
-  noStroke();
-  fill(0);
-  rectMode(CENTER);
-  rect(0,0,width/25,width/25);
-  fill(222);
-  rectMode(CENTER);
-  rect(width/250, width/250, (width/25 - width/125), (width /25 - width/125));
-  fill(244,0,0);
-  ellipseMode(CENTER);
-  ellipse(0, 0, width/25 - (width/25)/10, width/25 - (width/25)/10);
-
+  translate(width/2, height/10);
+  float imageScaleValue = width * 0.05 / startRecordImage.width;
+  image(startRecordImage, 0, 0, width * 0.05, startRecordImage.height * imageScaleValue);
   popMatrix();
 }
 
 void stopRecordButton(){
 
   pushMatrix();
+  translate(width/2, height/10);
+  float imageScaleValue = width * 0.05 / stopRecordImage.width;
+  image(stopRecordImage, 0, 0, width * 0.05, stopRecordImage.height * imageScaleValue);
+  popMatrix();
+}
 
+void playButton(){
 
+  pushMatrix();
+  translate(width * 0.42, height/10);
+  float imageScaleValue = width * 0.05 / playImage.width;
+  image(playImage, 0, 0, width * 0.05, playImage.height * imageScaleValue);
+  popMatrix();
+}
 
+void recordTimer(){
 
+  pushMatrix();
+
+  myFont = createFont("Tahoma", 100);
+  textFont(myFont);
+  fill(0);
+  textAlign(CENTER);
+  
+  if(timer.getElapsedTime() > 0){
+    timer.showTime();
+  }
+  
   popMatrix();
 }
 
 void midiMessage(MidiMessage message) {
 
-  if(state == READY_STATE){
+  if(state == READY_STATE || state == TUTORIAL_STATE || state == RECORD_STATE){
 
-    int note = (int)(message.getMessage()[1] & 0xFF) ;
+    int note = (int)(message.getMessage()[1] & 0xFF);
     int vel = (int)(message.getMessage()[2] & 0xFF);
-
+  
     //port.write(Integer.toString(note-36));
     // write any charcter that marks the end of a number
     //port.write('e');
 
     if (48 <= note && note <= 48 + piano.keyCount) {
 
-
-
       if (vel > 0 ) {
 
         piano.states.set(note-48, true);
 
+        if(recording){
+          String noteInfo = Integer.toString(note-48) + " " + Float.toString(timer.getElapsedTime() * 0.001)  + " P";
+          midiRecord.println(noteInfo);
+        }
+
         // if (upcoming.size() > 0) {
         //   if (upcoming.get(0).size() > 0) {
         //     ArrayList<Integer> currentChord = upcoming.get(0);
-
-
 
         //     for (int i = currentChord.size()-1; i >=0; i--) {
 
@@ -424,6 +473,11 @@ void midiMessage(MidiMessage message) {
       } else {
 
         piano.states.set(note-48, false);
+        
+        if(recording){
+          String noteInfo = Integer.toString(note-48) + " " + Float.toString(timer.getElapsedTime() * 0.001) + " R";
+          midiRecord.println(noteInfo);
+        }
         // port.write(Integer.toString((12 - ((note-48)))*2));
         // // write any charcter that marks the end of a number
         // port.write('e');
@@ -434,10 +488,12 @@ void midiMessage(MidiMessage message) {
 
 void recordFromMidi(){
 
+  if(timer.getElapsedTime() > 0 && !recording){
+    saveMidiAudio();
+  }
+}
 
-
-
-
+void saveMidiAudio(){
 
 
 
