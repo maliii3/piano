@@ -3,6 +3,7 @@ import java.lang.*;
 import themidibus.*; //Import the library
 import javax.sound.midi.MidiMessage;
 import processing.serial.*;
+import static javax.swing.JOptionPane.*;
 
 static final int SETUP_STATE = 0;
 static final int READY_STATE = 1;
@@ -11,54 +12,34 @@ static final int TUTORIAL_STATE = 3;
 static final int SETTINGS_STATE = 4;
 static final int MODE_SELECTION_STATE = 5;
 
-	
-PrintWriter output;
-PrintWriter midiRecord;
-PImage tutorialImage;
-PImage recordImage;
-PImage backImage;
-PImage startRecordImage;
-PImage stopRecordImage;
-PImage playImage;
+Player playplay;
+TutorialPage tutorialPage;
+PrintWriter output, midiRecord;
+Buttons buttons;
 File recordFile;
-
-Timer timer;
-int state;
-boolean recording = false;
+Timer timer, playerTimer;
+int state, textBackground = 222;
+boolean recording = false, clicked = false, saved = false;
 String msg = "";
 Piano piano;
-int pianoKeyCount;
-boolean clicked = false;
 PFont myFont;
-int anannnn = 222;
 ArrayList<Integer> notes = new ArrayList<Integer>();
 ArrayList<Integer> chords = new ArrayList<Integer>();
-ArrayList<ArrayList<Integer> > upcoming = new ArrayList<ArrayList<Integer> >();
+ArrayList<Boolean> playing = new ArrayList<Boolean>();
+ArrayList<String> temporaryRecord = new ArrayList<String>();
 
 Serial port;
 MidiBus myBus;
 
-int currentColor = 0;
-int midiDevice  = 0;
-
 void setup() {
   
   timer = new Timer();
-  startRecordImage = loadImage("startRecord.png");
-  stopRecordImage = loadImage("stopRecord.png");
-  tutorialImage = loadImage("tutorial.png");
-  recordImage = loadImage("record.png");
-  backImage = loadImage("back.png");
-  playImage = loadImage("play.png");
+  playerTimer = new Timer();
+  buttons = new Buttons();
+  playing.add(false);
+  tutorialPage = new TutorialPage();
 
   background(204);
-  
-  recordFile = new File(sketchPath() + "/records");
-  String[] listPath = recordFile.list();
-
-  String recordName = "record" + Integer.toString(listPath.length);
-
-  midiRecord = createWriter("./records/" + recordName + ".txt"); 
 
   String[] lines = loadStrings("db.txt");
   
@@ -69,15 +50,8 @@ void setup() {
   }
   else{
     state = MODE_SELECTION_STATE;
-
-    pianoKeyCount = Integer.parseInt(lines[0]);
-    
-    piano = new Piano(pianoKeyCount);
-  
-    println(this.piano.pianoWidth);
-    println(this.piano.pianoHeight);
-
-    myBus = new MidiBus(this, midiDevice, 1);
+    piano = new Piano(Integer.parseInt(lines[0]));
+    myBus = new MidiBus(this, 0, 1);
   }
   fullScreen();
   //printArray(Serial.list());
@@ -85,108 +59,57 @@ void setup() {
   //MidiBus.list();
 }
 
-
 void draw() {
 
-    switch(state) {
- 
-        case SETUP_STATE:
-        //
-            setupState();
-            break;
- 
-        case READY_STATE:
-        //
-            readyState();
-            break;
- 
-        case RECORD_STATE:
-        //
-            recordState();
-            break;
+  //final String id = showInputDialog("Please enter new ID");
+  switch(state) {
 
-        case TUTORIAL_STATE:
+    case SETUP_STATE:
+      setupState();
+      break;
 
-            tutorialState();
-            break;
+    case READY_STATE:
+      readyState();
+      break;
 
-        case SETTINGS_STATE:
+    case RECORD_STATE:
+      recordState();
+      break;
 
-            settingState();
-            break;
+    case TUTORIAL_STATE:
+      tutorialState();
+      break;
 
-        case MODE_SELECTION_STATE:
+    case SETTINGS_STATE:
+      settingState();
+      break;
 
-            modeSelectionState();
-            break;
-
- 
-    }//switch
+    case MODE_SELECTION_STATE:
+      modeSelectionState();
+      break;
+  }
   
-  // if (upcoming.size() > 0) {
-
-  //   if (upcoming.get(0).size() > 0) {
-  //     ArrayList<Integer> currentChord = upcoming.get(0);
-
-  //     for (int note : currentChord) {
-  //       states.set(note-48, true);
-
-  //       port.write(Integer.toString(12 - ((note-48))));
-  //       // write any charcter that marks the end of a number
-  //       port.write('e');
-  //     }
-  //   } else {
-     
-  //     upcoming.remove(0);
-  //     delay(1000);
-  //   }
-  // }
 }
 
 void setupState(){
-    
-    background(204);
-    myFont = createFont("Tahoma", 32);
-    textFont(myFont);
-    textSize(32);
-    fill(0);
-    textAlign(CENTER);
-    text("How many keys your piano have? ", width/2, height/2 - 100); 
-    textInputDiv();
+  
+  pushMatrix();
+  background(204);
+  myFont = createFont("Tahoma", 32);
+  textFont(myFont);
+  textSize(32);
+  fill(0);
+  textAlign(CENTER);
+  text("How many keys your piano have? ", width/2, height/2 - 100); 
+  textInputDiv();
+  popMatrix();
 
 }
 
 void readyState(){
   
   pushMatrix();
-  rectMode(CORNER);
-  stroke(1);
-  //rectMode(CENTER);
-
-  float scaleValue = width * 1.0 / piano.pianoWidth;
-  
-  if(piano.pianoWidth > width){
-    
-    translate(width / 2 - piano.pianoWidth * scaleValue / 2, height / 2 - (piano.pianoHeight * scaleValue) / 2);
-    scale(scaleValue);
-  }
-  else {
-    translate(width / 2 - piano.pianoWidth / 2, height / 2 - piano.pianoHeight / 2);
-  }
-  
-  for (int j = 0; j < piano.keyCount ; j++) {
-    for(int a = 0; a < piano.octaveCount + 1 ; a++){
-      if (j != 1 + a * 12 || j != 3 + a * 12 || j != 6 + a * 12 ||j != 8 + a * 12 || j != 10 + a * 12 )
-        piano.keys.get(j).show(piano.states.get(j));
-    }
-  }
-
-  for (int k = 0; k < piano.keyCount; k++) {
-    for(int b = 0; b < piano.octaveCount + 1 ; b++){
-      if (k == 1 + b * 12 || k == 3 + b * 12 || k == 6 + b * 12 ||k == 8 + b * 12 || k == 10 + b * 12 )
-        piano.keys.get(k).show(piano.states.get(k));
-    }
-  }
+  piano.show();
   popMatrix();
 }
 
@@ -194,14 +117,27 @@ void recordState(){
 
   pushMatrix();
   background(204);
+  
+  if(!playing.get(0)){
+    buttons.playButton();
+  }
+  else{
+    buttons.pauseButton();
+  }
+
+  if(playing.get(0))
+    playplay.playRecord(playerTimer.getElapsedTime(), piano.states, playerTimer, timer, playing);
+    
   if(!recording)
-    startRecordButton();
+    buttons.startRecordButton();
   else
-    stopRecordButton();
-  playButton();
+    buttons.stopRecordButton();
+  
+  buttons.backButton();
+  buttons.saveButton();
+  buttons.deleteButton();
   recordTimer();
-  backButton();
-  readyState();
+  piano.show();
   popMatrix();
 }
 
@@ -209,14 +145,9 @@ void tutorialState(){
 
   pushMatrix();
   background(204);
-  myFont = createFont("Tahoma", 100);
-  textFont(myFont);
-  fill(0);
-  textAlign(CENTER);
-  text("TUTORIAL STATE", width/2, height/2); 
-  backButton();
+  tutorialPage.show();
+  buttons.backButton();
   popMatrix();
-  
 }
 
 void settingState(){
@@ -228,8 +159,8 @@ void settingState(){
 void modeSelectionState(){
 
   background(204);
-  tutorialButton();
-  recordButton();
+  buttons.tutorialButton();
+  buttons.recordButton();
 }
 
 void textInputDiv(){
@@ -237,32 +168,32 @@ void textInputDiv(){
   pushMatrix();
   rectMode(CENTER);
   noStroke();
-  fill(anannnn);
+  fill(textBackground);
   rect(width/2, height/2, width/10, height/10, 10);
   
   if(clicked){
 
-      rectMode(CORNER);
-      
-      translate(width/2 - width/20, height/2 - height/20);
+    rectMode(CORNER);
+    
+    translate(width/2 - width/20, height/2 - height/20);
 
-      myFont = createFont("Tahoma", 72);
-      textFont(myFont);
+    myFont = createFont("Tahoma", 72);
+    textFont(myFont);
+    fill(0);
+    //textAlign(CENTER);
+    text(msg, width/20, height/15 ); 
+
+    if(frameCount % 5 == 0){
       fill(0);
-      //textAlign(CENTER);
-      text(msg, width/20, height/15 ); 
+      delay(250);
+    }
+    else{
+      fill(200);
+      delay(250);
+    }
 
-      if(frameCount % 5 == 0){
-          fill(0);
-          delay(250);
-      }
-      else{
-          fill(200);
-          delay(250);
-      }
-
-      if(msg.length() == 0)
-        rect(10,10,10,height/10-20);
+    if(msg.length() == 0)
+      rect(10,10,10,height/10-20);
   }
   popMatrix();
 }
@@ -271,8 +202,8 @@ void mousePressed(){
   
   if(state == SETUP_STATE){
     if(width/2 - width/20 < mouseX && mouseX < width/2 + width/20 && height/2 - height/20 < mouseY && mouseY < height/2 + height/20 ){
-        anannnn = 200;
-        clicked = true;
+      textBackground = 200;
+      clicked = true;
     }
   }
   // else {
@@ -303,6 +234,7 @@ void mousePressed(){
     if(!recording){
       if(width * 0.5 - width * 0.025 < mouseX && mouseX < width * 0.5 + width * 0.025 && height * 0.1 - width * 0.025 < mouseY && mouseY < height * 0.1 + width * 0.025){
         recording = true;
+        saved = false;
         timer.start();
       }
     }
@@ -310,8 +242,79 @@ void mousePressed(){
       if(width * 0.5 - width * 0.025 < mouseX && mouseX < width * 0.5 + width * 0.025 && height * 0.1 - width * 0.025 < mouseY && mouseY < height * 0.1 + width * 0.025){
         recording = false;
         timer.stop();
-        midiRecord.flush();
-        midiRecord.close();
+        //midiRecord.flush();
+        //midiRecord.close();
+      }
+    }
+
+    if(buttons.isSaveButtonPressed()){
+      if(temporaryRecord.size() > 0 && !saved){
+        
+        recordFile = new File(sketchPath() + "/records");
+        String[] listPath = recordFile.list();
+        boolean saveable = true;
+
+        do{
+          String recordFilename = showInputDialog("Please name your masterpiece");
+          
+          if(recordFilename == null)
+            break;
+
+          for(int i = 0 ; i < listPath.length ; i++){
+            
+            if(recordFilename.equals(listPath[i].substring(0,listPath[i].indexOf(".")))){
+              saveable = false;
+            }
+
+          }
+
+          if(saveable){ 
+            midiRecord = createWriter("./records/" + recordFilename + ".txt"); 
+
+            for(String recordLines : temporaryRecord){
+              midiRecord.println(recordLines);
+            }
+            saved = true;
+            midiRecord.flush();
+            midiRecord.close();
+          }
+        }
+        while(!saveable);
+      }
+      else if(temporaryRecord.size() == 0 && !saved){
+        showMessageDialog(null,"Record is empty!");
+      }
+
+    }
+
+    if(buttons.isPlayPauseButtonPressed()){
+      
+      if(!playing.get(0)){
+        if(temporaryRecord.size() >= 0){
+          ArrayList<String> playableCopy = new ArrayList<String>(temporaryRecord);
+          playplay = new Player(playableCopy);
+          playerTimer.start();
+          timer.start();
+          playing.set(0, true); 
+        }
+      }
+      else{
+        timer.stop();
+        playerTimer.stop();
+        for(int i = 0 ; i < piano.states.size() ; i++){
+          piano.states.set(i,false);
+        }
+        playing.set(0,false);
+      }
+    }
+
+    if(buttons.isDeleteButtonPressed()){
+
+      if(!playing.get(0) && temporaryRecord.size() >= 0){
+        
+        playerTimer.reset();
+        timer.reset();
+        temporaryRecord.clear(); 
       }
     }
   }
@@ -319,92 +322,22 @@ void mousePressed(){
 
 void keyPressed(){
   if(clicked){
-    //Detects only alphanumeric chars
-    if ((key>='0' && key<='9') && msg.length() < 3) {
-        msg+=key;
-    }
-    if(key == BACKSPACE && msg.length() > 0 ){
+    
 
-        msg = msg.substring(0,msg.length()-1);
-    }
+    if ((key>='0' && key<='9') && msg.length() < 3)
+      msg += key;
+    
+    if(key == BACKSPACE && msg.length() > 0 )
+      msg = msg.substring(0,msg.length()-1);
 
     if(key == ENTER){
-        state = MODE_SELECTION_STATE;
-        output.print(msg);
-        output.flush();
-        output.close();
-        setup();
+      state = MODE_SELECTION_STATE;
+      output.print(msg);
+      output.flush();
+      output.close();
+      setup();
     }
   }
-}
-
-void tutorialButton(){
-
-  pushMatrix();
-  rectMode(CORNER);
-  fill(150);
-  noStroke();
-  rect(width * 0.1 , height * 0.5 - (width * 0.175) , width * 0.35 , width * 0.35 , width / 100);
-  translate(width * 0.1 , height * 0.5 - (width * 0.175));
-  imageMode(CENTER);
-  float imageScaleValue = width * 0.30 / tutorialImage.width;
-  image(tutorialImage, width * 0.175, width * 0.175, width * 0.30, tutorialImage.height * imageScaleValue);
-  popMatrix();
-
-}
-
-void recordButton(){
-
-  pushMatrix();
-  rectMode(CORNER);
-  fill(150);
-  noStroke();
-  rect(width * 0.55 , height * 0.5 - (width * 0.175), width * 0.35 , width * 0.35 , width / 100 );
-  translate(width * 0.55 , height * 0.5 - (width * 0.175));
-  imageMode(CENTER);
-  float imageScaleValue = width * 0.20 / startRecordImage.width;
-  image(startRecordImage, width * 0.175 , width * 0.175, width * 0.20, startRecordImage.height * imageScaleValue);
-  popMatrix();
-}
-
-void backButton(){
-
-  pushMatrix();
-  fill(204);
-  noStroke();
-  rectMode(CENTER);
-  rect(width / 25, width / 25, width/25 , width/25);
-  translate(width / 25, width / 25);
-  imageMode(CENTER);
-  image(backImage, 0, 0 , width / 25, width / 25 );
-  popMatrix();
-}
-
-void startRecordButton(){
-
-  pushMatrix();
-  translate(width/2, height/10);
-  float imageScaleValue = width * 0.05 / startRecordImage.width;
-  image(startRecordImage, 0, 0, width * 0.05, startRecordImage.height * imageScaleValue);
-  popMatrix();
-}
-
-void stopRecordButton(){
-
-  pushMatrix();
-  translate(width/2, height/10);
-  float imageScaleValue = width * 0.05 / stopRecordImage.width;
-  image(stopRecordImage, 0, 0, width * 0.05, stopRecordImage.height * imageScaleValue);
-  popMatrix();
-}
-
-void playButton(){
-
-  pushMatrix();
-  translate(width * 0.42, height/10);
-  float imageScaleValue = width * 0.05 / playImage.width;
-  image(playImage, 0, 0, width * 0.05, playImage.height * imageScaleValue);
-  popMatrix();
 }
 
 void recordTimer(){
@@ -442,28 +375,10 @@ void midiMessage(MidiMessage message) {
 
         if(recording){
           String noteInfo = Integer.toString(note-48) + " " + Float.toString(timer.getElapsedTime() * 0.001)  + " P";
-          midiRecord.println(noteInfo);
+          //midiRecord.println(noteInfo);
+          temporaryRecord.add(noteInfo);
         }
 
-        // if (upcoming.size() > 0) {
-        //   if (upcoming.get(0).size() > 0) {
-        //     ArrayList<Integer> currentChord = upcoming.get(0);
-
-        //     for (int i = currentChord.size()-1; i >=0; i--) {
-
-        //       if (currentChord.get(i) == note) {
-        //         println(note, " için girdim");
-              
-        //         states.set(note-48, false);
-        //         port.write(Integer.toString((12 - ((note-48)))*2));
-        //         // write any charcter that marks the end of a number
-        //         port.write('e');
-              
-        //         currentChord.remove(i);
-        //       }
-        //     }
-        //   }
-        // }
 
         //states.set(note-48, true);
 
@@ -476,7 +391,8 @@ void midiMessage(MidiMessage message) {
         
         if(recording){
           String noteInfo = Integer.toString(note-48) + " " + Float.toString(timer.getElapsedTime() * 0.001) + " R";
-          midiRecord.println(noteInfo);
+          //midiRecord.println(noteInfo);
+          temporaryRecord.add(noteInfo);
         }
         // port.write(Integer.toString((12 - ((note-48)))*2));
         // // write any charcter that marks the end of a number
@@ -495,6 +411,5 @@ void recordFromMidi(){
 
 void saveMidiAudio(){
 
-
-
 }
+
