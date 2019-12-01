@@ -4,6 +4,9 @@ import themidibus.*; //Import the library
 import javax.sound.midi.MidiMessage;
 import processing.serial.*;
 import static javax.swing.JOptionPane.*;
+import ddf.minim.*;
+import ddf.minim.AudioPlayer;
+import ddf.minim.ugens.*;
 
 static final int SETUP_STATE = 0;
 static final int READY_STATE = 1;
@@ -12,6 +15,7 @@ static final int TUTORIAL_STATE = 3;
 static final int SETTINGS_STATE = 4;
 static final int MODE_SELECTION_STATE = 5;
 
+int keyOffset = 36;
 Player playplay;
 TutorialPage tutorialPage;
 PrintWriter output, midiRecord;
@@ -27,9 +31,13 @@ ArrayList<Integer> notes = new ArrayList<Integer>();
 ArrayList<Integer> chords = new ArrayList<Integer>();
 ArrayList<Boolean> playing = new ArrayList<Boolean>();
 ArrayList<String> temporaryRecord = new ArrayList<String>();
-
+ArrayList<String> notePitches = new ArrayList<String>();
 Serial port;
 MidiBus myBus;
+
+Minim minim;
+AudioOutput out;
+AudioPlayer[] audioNotes = new AudioPlayer[63];
 
 void setup() {
   
@@ -38,8 +46,15 @@ void setup() {
   buttons = new Buttons();
   playing.add(false);
   tutorialPage = new TutorialPage();
-
   background(204);
+  minim = new Minim(this);
+  out = minim.getLineOut();
+  out.printControls();
+  populateNote();
+  
+  for (int i = 0; i < audioNotes.length; i++) {
+    audioNotes[i] = minim.loadFile("newSounds/" + i + ".wav");
+  }
 
   String[] lines = loadStrings("db.txt");
   
@@ -366,34 +381,48 @@ void midiMessage(MidiMessage message) {
     //port.write(Integer.toString(note-36));
     // write any charcter that marks the end of a number
     //port.write('e');
-
-    if (48 <= note && note <= 48 + piano.keyCount) {
+    
+    if (keyOffset <= note && note <= keyOffset + piano.keyCount) {
 
       if (vel > 0 ) {
 
-        piano.states.set(note-48, true);
+        piano.states.set(note-keyOffset, true);
 
         if(recording){
-          String noteInfo = Integer.toString(note-48) + " " + Float.toString(timer.getElapsedTime() * 0.001)  + " P";
+          String noteInfo = Integer.toString(note-keyOffset) + " " + Float.toString(timer.getElapsedTime() * 0.001)  + " P";
           //midiRecord.println(noteInfo);
+          
           temporaryRecord.add(noteInfo);
         }
 
+        // audioNotes[note-48].rewind();
+        // audioNotes[note-48].play();
 
-        //states.set(note-48, true);
+        String strNote = "";
 
-        //port.write(Integer.toString(12 - ((note-48))));
+        strNote = notePitches.get((note-keyOffset) % 12) + (((note-keyOffset) / 12) + 2); 
+
+        out.playNote(0,1,strNote);
+
+        //states.set(note-keyOffset, true);
+
+        //port.write(Integer.toString(12 - ((note-keyOffset))));
         // write any charcter that marks the end of a number
         //port.write('e');
       } else {
 
-        piano.states.set(note-48, false);
+        piano.states.set(note-keyOffset, false);
         
         if(recording){
-          String noteInfo = Integer.toString(note-48) + " " + Float.toString(timer.getElapsedTime() * 0.001) + " R";
+          String noteInfo = Integer.toString(note-keyOffset) + " " + Float.toString(timer.getElapsedTime() * 0.001) + " R";
           //midiRecord.println(noteInfo);
           temporaryRecord.add(noteInfo);
         }
+        String strNote = "";
+        println("kaldırdım :D");
+        strNote = notePitches.get((note - keyOffset) % 12) + (((note - keyOffset) / 12) + 2); 
+        out.playNote(0,1,strNote);
+        
         // port.write(Integer.toString((12 - ((note-48)))*2));
         // // write any charcter that marks the end of a number
         // port.write('e');
@@ -402,14 +431,18 @@ void midiMessage(MidiMessage message) {
   }
 }
 
-void recordFromMidi(){
-
-  if(timer.getElapsedTime() > 0 && !recording){
-    saveMidiAudio();
-  }
+void populateNote(){
+  
+  notePitches.add("C");
+  notePitches.add("C#");
+  notePitches.add("D");
+  notePitches.add("D#");
+  notePitches.add("E");
+  notePitches.add("F");
+  notePitches.add("F#");
+  notePitches.add("G");
+  notePitches.add("G#");
+  notePitches.add("A");
+  notePitches.add("A#");
+  notePitches.add("B");
 }
-
-void saveMidiAudio(){
-
-}
-
