@@ -92,8 +92,8 @@ class Player{
           
           println(this.notePitches.get((noteValue) % 12) + (((noteValue) / 12) + 2));
           strNote = this.notePitches.get((noteValue) % 12) + (((noteValue) / 12) + 2); 
-
-          out.playNote(strNote);
+          note( 0, 2.5, PIANO_CHANNEL, strNote, 0.8 );
+          //out.playNote(strNote);
         }
         else{
           states.set(noteValue,false);

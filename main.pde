@@ -1,7 +1,7 @@
 import java.io.*;
 import java.lang.*;
 import themidibus.*; //Import the library
-import javax.sound.midi.MidiMessage;
+import javax.sound.midi.*;
 import processing.serial.*;
 import static javax.swing.JOptionPane.*;
 import ddf.minim.*;
@@ -35,11 +35,45 @@ ArrayList<String> notePitches = new ArrayList<String>();
 Serial port;
 MidiBus myBus;
 
+/*******************************************/
+Synthesizer  synth;
+// the MidiChannels of the synth.
+MidiChannel[] channels;
+
+// constants to refer to the channels we are going to put our instruments on.
+int PIANO_CHANNEL = 0;
+/*******************************************/
+
 Minim minim;
 AudioOutput out;
-AudioPlayer[] audioNotes = new AudioPlayer[63];
 
 void setup() {
+
+
+  /*******************************************/
+  try
+  {
+    synth = MidiSystem.getSynthesizer();
+    synth.open();
+    Soundbank sounds = MidiSystem.getSoundbank( createInput("TimGM6mb.sf2") );
+    synth.loadAllInstruments( sounds );
+    // get all the channels for the synth
+    channels = synth.getChannels();
+    // we're only going to use two channels,
+    // which we'll now configure to use particular midi instruments. 
+    // but you should have up to 16 channels available.
+    // for a list of general midi instrument program numbers, see: http://www.midi.org/techspecs/gm1sound.php
+    channels[PIANO_CHANNEL].programChange( 0 ); // should be "electric piano 1"
+    
+    // remember that time and duration are expressed relative to the tempo.
+    // so the first two arguments here mean: on beat 0, play a dotted quarter note.
+  }
+  catch( Exception ex )
+  {
+    // oops there wasn't one.
+    println( "No default synthesizer, sorry bud." , ex.toString());
+  } 
+  /*******************************************/
   
   timer = new Timer();
   playerTimer = new Timer();
@@ -49,12 +83,7 @@ void setup() {
   background(204);
   minim = new Minim(this);
   out = minim.getLineOut();
-  out.printControls();
   populateNote();
-  
-  for (int i = 0; i < audioNotes.length; i++) {
-    audioNotes[i] = minim.loadFile("newSounds/" + i + ".wav");
-  }
 
   String[] lines = loadStrings("db.txt");
   
@@ -103,10 +132,10 @@ void draw() {
       modeSelectionState();
       break;
   }
-  
 }
 
 void setupState(){
+  
   
   pushMatrix();
   background(204);
@@ -378,6 +407,9 @@ void midiMessage(MidiMessage message) {
     int note = (int)(message.getMessage()[1] & 0xFF);
     int vel = (int)(message.getMessage()[2] & 0xFF);
   
+    float velValue = vel * 1.0 / 127;
+
+
     //port.write(Integer.toString(note-36));
     // write any charcter that marks the end of a number
     //port.write('e');
@@ -395,14 +427,10 @@ void midiMessage(MidiMessage message) {
           temporaryRecord.add(noteInfo);
         }
 
-        // audioNotes[note-48].rewind();
-        // audioNotes[note-48].play();
-
         String strNote = "";
 
         strNote = notePitches.get((note-keyOffset) % 12) + (((note-keyOffset) / 12) + 2); 
-
-        out.playNote(0,1,strNote);
+        note( 0, 2.5, PIANO_CHANNEL, strNote, velValue );
 
         //states.set(note-keyOffset, true);
 
@@ -418,10 +446,7 @@ void midiMessage(MidiMessage message) {
           //midiRecord.println(noteInfo);
           temporaryRecord.add(noteInfo);
         }
-        String strNote = "";
-        println("kaldırdım :D");
-        strNote = notePitches.get((note - keyOffset) % 12) + (((note - keyOffset) / 12) + 2); 
-        out.playNote(0,1,strNote);
+        //out.resumeNotes();
         
         // port.write(Integer.toString((12 - ((note-48)))*2));
         // // write any charcter that marks the end of a number
@@ -445,4 +470,9 @@ void populateNote(){
   notePitches.add("A");
   notePitches.add("A#");
   notePitches.add("B");
+}
+
+void note( float time, float duration, int channelIndex, String noteName, float velocity )
+{
+  out.playNote( time, duration, new MidiSynth( channelIndex, noteName, velocity ) );
 }
