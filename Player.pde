@@ -90,7 +90,7 @@ class Player{
           states.set(noteValue,true);
           String strNote = "";
           
-          println(this.notePitches.get((noteValue) % 12) + (((noteValue) / 12) + 2));
+          //println(this.notePitches.get((noteValue) % 12) + (((noteValue) / 12) + 2));
           strNote = this.notePitches.get((noteValue) % 12) + (((noteValue) / 12) + 2); 
           note( 0, 2.5, PIANO_CHANNEL, strNote, 0.8 );
           //out.playNote(strNote);
