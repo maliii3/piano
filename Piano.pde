@@ -75,6 +75,7 @@ class Piano{
 
   void show(){
 
+    pushMatrix();
     rectMode(CORNER);
 
     stroke(1);
@@ -104,5 +105,45 @@ class Piano{
           this.keys.get(k).show(this.states.get(k));
       }
     }
+    popMatrix();
+  }
+
+  void show(String state){
+
+    pushMatrix();
+    rectMode(CORNER);
+
+    stroke(1);
+    //rectMode(CENTER);
+
+    float scaleValue = width * 1.0 / this.pianoWidth;
+    
+    if(this.pianoWidth > width){
+        
+      translate(width / 2 - this.pianoWidth * scaleValue / 2, height / 2 - (this.pianoHeight * scaleValue) / 2);
+      scale(scaleValue);
+    }
+    else {
+      translate(width / 2 - this.pianoWidth / 2, height / 2 - this.pianoHeight / 2);
+    }
+
+    translate(0, height - this.pianoHeight * 1.5);
+    
+    for (int j = 0; j < this.keyCount ; j++) {
+      for(int a = 0; a < this.octaveCount + 1 ; a++){
+        if (j != 1 + a * 12 || j != 3 + a * 12 || j != 6 + a * 12 ||j != 8 + a * 12 || j != 10 + a * 12 )
+          this.keys.get(j).show(this.states.get(j));
+      }
+    }
+
+    for (int k = 0; k < this.keyCount; k++) {
+      for(int b = 0; b < this.octaveCount + 1 ; b++){
+        if (k == 1 + b * 12 || k == 3 + b * 12 || k == 6 + b * 12 ||k == 8 + b * 12 || k == 10 + b * 12 )
+          this.keys.get(k).show(this.states.get(k));
+      }
+    }
+
+    
+    popMatrix();
   }
 }
