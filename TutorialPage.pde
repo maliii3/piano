@@ -7,10 +7,12 @@ class TutorialPage{
   ArrayList<Record> records;
   int currentPage;
   int offset;
+  int trackSelected;
   File recordFolder;
   
   TutorialPage(){
     
+    this.trackSelected = -1;
     this.currentPage = 0;
     this.recordFolder = new File(sketchPath() + "/records");
     this.records = new ArrayList<Record>();
@@ -29,16 +31,32 @@ class TutorialPage{
   }
 
   void show(){
+
     if(this.records.size() > 4){
       for(int i = 0 ; i < 4; i++){
         this.records.get(i).show(i);
+        if(mousePressed && (frameCount - 1 > tutorialWait )){
+          int currentSelectedTrack = this.records.get(i).isSelected(i);
+          if(currentSelectedTrack != -1){
+            this.trackSelected = currentSelectedTrack;
+            break; 
+          }
+        }
       }
     }
     else{
       for(int i = 0 ; i < this.records.size(); i++){
         this.records.get(i).show(i);
+        if(mousePressed && (frameCount - 1 > tutorialWait )){
+          int currentSelectedTrack = this.records.get(i).isSelected(i);
+          if(currentSelectedTrack != -1){
+            this.trackSelected = currentSelectedTrack;
+            break; 
+          }
+        }
       }
     }
+    
   }
 
   // void nextPage(){
