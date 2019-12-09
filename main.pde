@@ -14,6 +14,8 @@ static final int RECORD_STATE = 2;
 static final int TUTORIAL_STATE = 3;
 static final int SETTINGS_STATE = 4;
 static final int MODE_SELECTION_STATE = 5;
+static final int backgroundColor = 222;
+static int tutorialWait = 0;
 
 int keyOffset = 36;
 Player playplay;
@@ -22,7 +24,7 @@ PrintWriter output, midiRecord;
 Buttons buttons;
 File recordFile;
 Timer timer, playerTimer;
-int state, textBackground = 222;
+int state, textBackground = 240;
 boolean recording = false, clicked = false, saved = false;
 String msg = "";
 Piano piano;
@@ -42,6 +44,7 @@ MidiChannel[] channels;
 
 // constants to refer to the channels we are going to put our instruments on.
 int PIANO_CHANNEL = 0;
+
 /*******************************************/
 
 Minim minim;
@@ -57,16 +60,9 @@ void setup() {
     synth.open();
     Soundbank sounds = MidiSystem.getSoundbank( createInput("TimGM6mb.sf2") );
     synth.loadAllInstruments( sounds );
-    // get all the channels for the synth
     channels = synth.getChannels();
-    // we're only going to use two channels,
-    // which we'll now configure to use particular midi instruments. 
-    // but you should have up to 16 channels available.
     // for a list of general midi instrument program numbers, see: http://www.midi.org/techspecs/gm1sound.php
     channels[PIANO_CHANNEL].programChange( 0 ); // should be "electric piano 1"
-    
-    // remember that time and duration are expressed relative to the tempo.
-    // so the first two arguments here mean: on beat 0, play a dotted quarter note.
   }
   catch( Exception ex )
   {
@@ -80,7 +76,7 @@ void setup() {
   buttons = new Buttons();
   playing.add(false);
   tutorialPage = new TutorialPage();
-  background(204);
+  background(backgroundColor);
   minim = new Minim(this);
   out = minim.getLineOut();
   populateNote();
@@ -90,7 +86,6 @@ void setup() {
   if(lines == null || lines.length == 0){
     state = SETUP_STATE; // SETUP STATE
     output = createWriter("db.txt"); 
-   
   }
   else{
     state = MODE_SELECTION_STATE;
@@ -105,7 +100,6 @@ void setup() {
 
 void draw() {
 
-  //final String id = showInputDialog("Please enter new ID");
   switch(state) {
 
     case SETUP_STATE:
@@ -136,9 +130,8 @@ void draw() {
 
 void setupState(){
   
-  
   pushMatrix();
-  background(204);
+  background(backgroundColor);
   myFont = createFont("Tahoma", 32);
   textFont(myFont);
   textSize(32);
@@ -160,7 +153,7 @@ void readyState(){
 void recordState(){
 
   pushMatrix();
-  background(204);
+  background(backgroundColor);
   
   if(!playing.get(0)){
     buttons.playButton();
@@ -188,21 +181,28 @@ void recordState(){
 void tutorialState(){
 
   pushMatrix();
-  background(204);
-  tutorialPage.show();
+  background(backgroundColor);
+
+  if(tutorialPage.trackSelected == -1){
+    tutorialPage.show();
+  }
+  else{
+    piano.show("TUTORIAL");
+  }
+
   buttons.backButton();
   popMatrix();
 }
 
 void settingState(){
-  // piano count
-
-
+  // piano key count should be changed
+  // maybe background colors can be changed
+  // Sounds of the piano can be changed????????*
 }
 
 void modeSelectionState(){
 
-  background(204);
+  background(backgroundColor);
   buttons.tutorialButton();
   buttons.recordButton();
 }
@@ -258,6 +258,8 @@ void mousePressed(){
 
     if(width * 0.1 < mouseX && mouseX < width * 0.45 && height * 0.5 - (width * 0.175) < mouseY && mouseY < height * 0.5 + (width * 0.175)){
       state = TUTORIAL_STATE;
+      tutorialWait = frameCount;
+
     }
 
     if(width * 0.55 < mouseX && mouseX < width * 0.9 && height * 0.5 - (width * 0.175) < mouseY && mouseY < height * 0.5 + (width * 0.175)){
@@ -268,8 +270,13 @@ void mousePressed(){
   if(state == RECORD_STATE || state == TUTORIAL_STATE){
 
     if(width / 50 < mouseX && mouseX < width / 50 + width / 25 && width / 50 < mouseY && mouseY < width / 50 + width / 25){
-
-      state = MODE_SELECTION_STATE;
+      if(state == TUTORIAL_STATE)
+        if(tutorialPage.trackSelected != -1)
+          tutorialPage.trackSelected = -1;
+        else
+          state = MODE_SELECTION_STATE;
+      else
+        state = MODE_SELECTION_STATE;
     }
   }
 
@@ -365,9 +372,9 @@ void mousePressed(){
 }
 
 void keyPressed(){
+
   if(clicked){
     
-
     if ((key>='0' && key<='9') && msg.length() < 3)
       msg += key;
     
@@ -409,8 +416,7 @@ void midiMessage(MidiMessage message) {
   
     float velValue = vel * 1.0 / 127;
 
-
-    //port.write(Integer.toString(note-36));
+    //port.write(Integer.toString(note-offset));
     // write any charcter that marks the end of a number
     //port.write('e');
     
@@ -431,7 +437,7 @@ void midiMessage(MidiMessage message) {
 
         strNote = notePitches.get((note-keyOffset) % 12) + (((note-keyOffset) / 12) + 2); 
         note( 0, 2.5, PIANO_CHANNEL, strNote, velValue );
-
+        //out.playNote(strNote);
         //states.set(note-keyOffset, true);
 
         //port.write(Integer.toString(12 - ((note-keyOffset))));
@@ -448,7 +454,7 @@ void midiMessage(MidiMessage message) {
         }
         //out.resumeNotes();
         
-        // port.write(Integer.toString((12 - ((note-48)))*2));
+        // port.write(Integer.toString((12 - ((note-keyOffset)))*2));
         // // write any charcter that marks the end of a number
         // port.write('e');
       }
