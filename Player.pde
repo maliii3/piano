@@ -76,7 +76,6 @@ class Player{
 
     if(this.playableLines.size() > 0){
 
-      //int keyOffset = 36;
       String line = this.playableLines.get(0);
 
       int index = line.indexOf(" ");
@@ -90,10 +89,8 @@ class Player{
           states.set(noteValue,true);
           String strNote = "";
           
-          //println(this.notePitches.get((noteValue) % 12) + (((noteValue) / 12) + 2));
           strNote = this.notePitches.get((noteValue) % 12) + (((noteValue) / 12) + 2); 
           note( 0, 2.5, PIANO_CHANNEL, strNote, 0.8 );
-          //out.playNote(strNote);
         }
         else{
           states.set(noteValue,false);
