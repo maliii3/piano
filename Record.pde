@@ -23,10 +23,10 @@ class Record{
   void show(int index){
 
     pushMatrix();
-    rectMode(CENTER);
+    rectMode(CORNER);
     fill(242);
     noStroke();
-    rect((width * 0.5) , (height * 0.25 + (index * height * 0.20)), (width * 0.9), (height * 0.19), (width * 0.01));
+    rect(((width * 0.5) - ((width * 0.9)/ 2)) , (height * 0.25 + (index * height * 0.20)) - ((height * 0.19) / 2), (width * 0.9), (height * 0.19), (width * 0.01));
     this.myFont = createFont("Tahoma", 32);
     textFont(myFont);
     textSize(32);
@@ -38,7 +38,13 @@ class Record{
     popMatrix();
   }
 
-//   int select(){
+  int isSelected(int index){
     
-//   }
+    if(((width * 0.05)) <= mouseX && mouseX <= (width * 0.9) && (height * 0.25 + (index * height * 0.20)) - ((height * 0.19) / 2) <= mouseY && mouseY <= (height * 0.25 + (index * height * 0.20)) + ((height * 0.19) / 2) )
+      return index;
+    else
+      return -1;
+  
+  }
+
 }
