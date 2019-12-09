@@ -55,13 +55,14 @@ class Buttons{
   void backButton(){
 
     pushMatrix();
-    fill(204);
+    fill(backgroundColor);
     noStroke();
     rectMode(CENTER);
+    imageMode(CENTER);
     rect(width / 25, width / 25, width/25 , width/25);
     // translate(width / 25, width / 25);
     // translate(width / 25, width / 25);
-    //imageMode(CENTER);
+    
     image(this.backImage, width / 25, width / 25 , width / 25, width / 25 );
     popMatrix();
   }
