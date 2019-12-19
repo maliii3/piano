@@ -5,12 +5,18 @@ class Record{
   String description;
   String creator;
   String difficulty;
+  ArrayList<String> playableLines;
   PFont myFont;
 
   Record(String path){
 
     this.name = path.substring(0,path.indexOf("."));
     String[] lines = loadStrings("./records/" + path);
+    this.playableLines = new ArrayList<String>();
+    
+    for(int i = 0 ; lines != null && i < lines.length ; i++){
+      this.playableLines.add(lines[i]);
+    }
 
     float numericDuration = float(lines[lines.length-1].split(" ")[1]) - float(lines[0].split(" ")[1]);
     String seconds = numericDuration % 60 < 10 ? "0" + Integer.toString(int(numericDuration % 60)) : Integer.toString(int(numericDuration % 60));
@@ -18,6 +24,12 @@ class Record{
     String hours = Integer.toString(int(numericDuration / (60*60) % 24));
 
     this.duration = hours + ":" + minutes + ":" + seconds;
+  }
+
+  Record(Record rec){
+    this.name = rec.name;
+    this.duration = rec.duration;
+    this.playableLines = rec.playableLines;
   }
 
   void show(int index){
