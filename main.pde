@@ -20,6 +20,7 @@ static int tutorialWait = 0;
 int keyOffset = 36;
 Player playplay;
 TutorialPage tutorialPage;
+TutorialPlayer tutorialPlayer;
 PrintWriter output, midiRecord;
 Buttons buttons;
 File recordFile;
@@ -29,14 +30,15 @@ boolean recording = false, clicked = false, saved = false;
 String msg = "";
 Piano piano;
 PFont myFont;
-ArrayList<Integer> notes = new ArrayList<Integer>();
-ArrayList<Integer> chords = new ArrayList<Integer>();
+ArrayList<Integer> currentNotes = new ArrayList<Integer>();
 ArrayList<Boolean> playing = new ArrayList<Boolean>();
 ArrayList<String> temporaryRecord = new ArrayList<String>();
 ArrayList<String> notePitches = new ArrayList<String>();
+
 Serial port;
 MidiBus myBus;
-
+boolean tutorialPlaying = false; 
+boolean chordReleased = false;
 /*******************************************/
 Synthesizer  synth;
 // the MidiChannels of the synth.
@@ -186,8 +188,10 @@ void tutorialState(){
   if(tutorialPage.trackSelected == -1){
     tutorialPage.show();
   }
-  else{
+  else if(tutorialPage.trackSelected != -1 && tutorialPlaying) {
     piano.show("TUTORIAL");
+    tutorialPlayer.simulateKeys(piano.states);
+    tutorialPlayer.checkAllKeys(piano.states,currentNotes);
   }
 
   buttons.backButton();
@@ -271,12 +275,23 @@ void mousePressed(){
 
     if(width / 50 < mouseX && mouseX < width / 50 + width / 25 && width / 50 < mouseY && mouseY < width / 50 + width / 25){
       if(state == TUTORIAL_STATE)
-        if(tutorialPage.trackSelected != -1)
+        if(tutorialPage.trackSelected != -1){
+          tutorialPlaying = false;
           tutorialPage.trackSelected = -1;
+        }
         else
           state = MODE_SELECTION_STATE;
       else
         state = MODE_SELECTION_STATE;
+    }
+  }
+
+  if(state == TUTORIAL_STATE){
+
+    if(!tutorialPlaying && tutorialPage.trackSelected != -1){
+      tutorialPlaying = true;
+      println(tutorialPage.records.get(tutorialPage.trackSelected).name);
+      tutorialPlayer = new TutorialPlayer(tutorialPage.records.get(tutorialPage.trackSelected));
     }
   }
 
@@ -425,7 +440,7 @@ void midiMessage(MidiMessage message) {
       if (vel > 0 ) {
 
         piano.states.set(note-keyOffset, true);
-
+        currentNotes.add(note-keyOffset);
         if(recording){
           String noteInfo = Integer.toString(note-keyOffset) + " " + Float.toString(timer.getElapsedTime() * 0.001)  + " P";
           //midiRecord.println(noteInfo);
@@ -434,7 +449,6 @@ void midiMessage(MidiMessage message) {
         }
 
         String strNote = "";
-
         strNote = notePitches.get((note-keyOffset) % 12) + (((note-keyOffset) / 12) + 2); 
         note( 0, 2.5, PIANO_CHANNEL, strNote, velValue );
         //out.playNote(strNote);
@@ -445,6 +459,7 @@ void midiMessage(MidiMessage message) {
         //port.write('e');
       } else {
 
+        currentNotes.remove(currentNotes.indexOf(note-keyOffset));
         piano.states.set(note-keyOffset, false);
         
         if(recording){
