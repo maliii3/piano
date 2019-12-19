@@ -14,7 +14,7 @@ class Player{
     this.notePitches = new ArrayList<String>();
     this.populateNote();
 
-    for(int i = 0 ; lines != null && i < lines.length ; i++){
+    for(int i = 0 ; this.lines != null && i < this.lines.length ; i++){
       this.playableLines.add(lines[i]);
     }
   }
