@@ -19,7 +19,7 @@ class TutorialPage{
     String[] listPath = recordFolder.list();
     if(listPath.length > 4){
       for(int i = 0 ; i < 4 ; i++){
-        println(i);
+        println(listPath[i]);
         this.records.add(new Record(listPath[i]));
       }
     }
